@@ -1,5 +1,10 @@
 # GRPO from Scratch
 
+![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
+![PyTorch 2.0+](https://img.shields.io/badge/pytorch-2.0+-ee4c2c.svg)
+![vLLM](https://img.shields.io/badge/vLLM-0.4+-76b900.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
+
 A from-scratch implementation of **Group Relative Policy Optimization (GRPO)** — the core RL algorithm behind [DeepSeek-R1](https://arxiv.org/abs/2501.12948) — applied to mathematical reasoning.
 
 This repo contains training code for fine-tuning a 1.5B parameter language model (Qwen2.5-Math-1.5B, downloaded from HuggingFace at runtime) to solve competition-level math problems using only outcome-based rewards, no process supervision.
