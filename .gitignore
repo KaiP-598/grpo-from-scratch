@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+wandb/
+outputs/
+data/
+*.egg-info/
+dist/
+build/
+.env

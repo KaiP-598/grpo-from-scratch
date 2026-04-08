@@ -1,0 +1,11 @@
+experiment,variant,learning_rate,epochs_per_rollout,group_size,std_normalization,length_normalization,prompt,val_accuracy,val_format_accuracy,train_steps
+baseline,with_baseline,1e-5,1,8,true,false,reasoning,0.6740,0.9507,200
+no_baseline,no_baseline,1e-5,1,8,true,false,reasoning,0.1948,0.6331,200
+lr_5e-6,with_baseline,5e-6,1,8,true,false,reasoning,0.2767,0.6687,100
+lr_2e-5,with_baseline,2e-5,1,8,true,false,reasoning,0.7422,0.9871,100
+length_norm,with_baseline,1e-5,1,8,true,true,reasoning,0.6710,0.9613,100
+no_std_norm,with_baseline,1e-5,1,8,false,false,reasoning,0.5193,0.8923,100
+offpolicy_k4_clip,clipped,1e-5,4,8,true,false,reasoning,0.6027,0.9333,100
+offpolicy_k2_clip,clipped,1e-5,2,8,true,false,reasoning,0.5732,0.8931,100
+offpolicy_k4_noclip,unclipped,1e-5,4,8,true,false,reasoning,0.6876,0.9431,100
+minimal_prompt,with_baseline,1e-5,1,8,true,false,minimal,0.7210,0.9492,100

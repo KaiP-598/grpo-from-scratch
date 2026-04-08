@@ -1,0 +1,8 @@
+torch>=2.0
+transformers>=4.40
+vllm>=0.4
+wandb
+sympy
+latex2sympy2_extended
+math_verify
+pylatexenc
