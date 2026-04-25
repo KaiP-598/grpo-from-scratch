@@ -1,6 +1,6 @@
 # GRPO from Scratch: What I Learned Implementing DeepSeek-R1's Training Algorithm
 
-I implemented Group Relative Policy Optimization (GRPO) — the core RL algorithm behind DeepSeek-R1 — from scratch in PyTorch, then ran 10 ablation experiments to understand what actually matters. Starting from a base model with ~19% accuracy on competition math, training reaches **74.2%**.
+I implemented Group Relative Policy Optimization (GRPO) — the core RL algorithm behind DeepSeek-R1 — from scratch in PyTorch, then ran 10 ablation experiments to understand what actually matters. Model: Qwen2.5-Math-1.5B on the MATH benchmark. Starting from a base model with ~19% accuracy on competition math, training reaches **74.2%**.
 
 This post covers the five findings that surprised me most.
 
