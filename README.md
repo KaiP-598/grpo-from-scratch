@@ -7,11 +7,11 @@
 
 A from-scratch implementation of **Group Relative Policy Optimization (GRPO)** — the core RL algorithm behind [DeepSeek-R1](https://arxiv.org/abs/2501.12948) — applied to mathematical reasoning.
 
-This repo contains training code for fine-tuning a 1.5B parameter language model (Qwen2.5-Math-1.5B, downloaded from HuggingFace at runtime) to solve competition-level math problems using only outcome-based rewards, no process supervision.
+This repo contains training code for fine-tuning a 1.5B parameter language model (Qwen2.5-Math-1.5B, downloaded from HuggingFace at runtime) to solve grade school math problems (GSM8K) using only outcome-based rewards, no process supervision.
 
 ## Key Results
 
-Starting from a base model with ~19% accuracy on MATH, GRPO training reaches **74.2%** accuracy:
+Starting from a base model with ~19% accuracy on GSM8K, GRPO training reaches **74.2%** accuracy:
 
 ![Training reward curves across learning rates](results/figures/training_curves.png)
 
@@ -54,7 +54,7 @@ grpo/
   rewards.py          # Group advantage normalization
   training.py         # SFT and GRPO step functions
   grading.py          # Math answer extraction and verification
-  evaluation.py       # Batch evaluation on MATH problems
+  evaluation.py       # Batch evaluation on GSM8K problems
 prompts/
   reasoning.txt       # Chain-of-thought prompt template
   minimal.txt         # Direct-answer prompt template

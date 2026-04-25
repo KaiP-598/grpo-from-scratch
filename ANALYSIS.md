@@ -1,6 +1,6 @@
 # GRPO from Scratch: What I Learned Implementing DeepSeek-R1's Training Algorithm
 
-I implemented Group Relative Policy Optimization (GRPO) — the core RL algorithm behind DeepSeek-R1 — from scratch in PyTorch, then ran 10 ablation experiments to understand what actually matters. Model: Qwen2.5-Math-1.5B on the MATH benchmark. Starting from a base model with ~19% accuracy on competition math, training reaches **74.2%**.
+I implemented Group Relative Policy Optimization (GRPO) — the core RL algorithm behind DeepSeek-R1 — from scratch in PyTorch, then ran 10 ablation experiments to understand what actually matters. Model: Qwen2.5-Math-1.5B on GSM8K (grade school math, 7,473 training problems). Starting from a base model with ~19% accuracy, training reaches **74.2%**.
 
 This post covers the five findings that surprised me most.
 
@@ -93,7 +93,7 @@ Reusing each rollout K=4 times **without** clipping: 68.8%.
 Reusing K=4 times **with** PPO-style clipping (ε=0.2): 60.3%.  
 Reusing K=2 times with clipping: 57.3%.
 
-This surprised me. PPO clipping is standard practice — it's supposed to prevent the policy from moving too far from the distribution that generated the data. But at 1.5B scale on MATH, clipping actively hurts.
+This surprised me. PPO clipping is standard practice — it's supposed to prevent the policy from moving too far from the distribution that generated the data. But at 1.5B scale on GSM8K, clipping actively hurts.
 
 The likely explanation: the KL divergence between consecutive updates stays small enough that clipping's constraint is never needed, but the gradient truncation it causes (clipped ratios don't contribute to the gradient) reduces the effective batch size. You're paying the cost of clipping (weaker gradients) without getting the benefit (preventing divergence).
 
