@@ -6,7 +6,7 @@ Reads:
     - results/experiment_results.csv
 
 Writes:
-    - results/figures/training_curves.png   (Chart 1: LR sweep reward curves)
+    - results/figures/training_trajectory.png   (Chart 1: 19% to 74.2% trajectory, train + val accuracy)
     - results/figures/ablations.png         (Chart 2: all experiments bar chart)
     - results/figures/reward_entropy.png    (Chart 3: reward + entropy for best run)
 """
@@ -192,7 +192,7 @@ def chart_training_curves(histories: dict[str, list[dict]]):
     leg.get_frame().set_alpha(0.95)
 
     fig.tight_layout(rect=[0, 0, 1, 0.91])
-    out = FIG_DIR / "training_curves.png"
+    out = FIG_DIR / "training_trajectory.png"
     fig.savefig(out, dpi=200, facecolor="white")
     plt.close(fig)
     print(f"  wrote {out}")
