@@ -95,32 +95,105 @@ def extract_series(rows: list[dict], y_key: str, x_key: str = "grpo_step"):
 # ---------------------------------------------------------------------------
 
 def chart_training_curves(histories: dict[str, list[dict]]):
-    fig, ax = plt.subplots(figsize=(8, 5))
+    """Hero chart: 19% → 74.2% trajectory for the lr_2e-5 run."""
+    history = histories["lr_2e-5"]
 
-    style = {
-        "lr_2e-5":  dict(color="#2ca02c", label="LR = 2e-5 (best, 74.2%)",    lw=2.2),
-        "baseline": dict(color="#1f77b4", label="LR = 1e-5 (baseline, 67.4%)", lw=2.2),
-        "lr_5e-6":  dict(color="#d62728", label="LR = 5e-6 (too low, 27.7%)", lw=2.2),
-    }
+    xs_train, ys_train = extract_series(history, "grpo/fraction_correct")
+    xs_val,   ys_val   = extract_series(history, "grpo/val_accuracy")
 
-    for name in ["lr_2e-5", "baseline", "lr_5e-6"]:
-        xs, ys = extract_series(histories[name], "grpo/mean_reward")
-        # Smooth with a small moving average for readability
-        if len(ys) > 5:
-            ys = np.convolve(ys, np.ones(5) / 5, mode="valid")
-            xs = xs[4:]
-        ax.plot(xs, ys, **style[name])
+    # Smooth training rollout signal a bit
+    if len(ys_train) > 5:
+        ys_train = np.convolve(ys_train, np.ones(5) / 5, mode="valid")
+        xs_train = xs_train[4:]
 
-    ax.set_xlabel("Training step")
-    ax.set_ylabel("Mean reward (fraction of rollouts correct)")
-    ax.set_title("GRPO training: learning rate is the dominant hyperparameter")
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
+    })
+
+    BASE_C  = "#9b9b9b"   # base-model reference line
+    TRAIN_C = "#bbd5e8"   # training rollout, lighter
+    VAL_C   = "#1d6fb8"   # validation accuracy, prominent
+    HIGHLIGHT = "#f5a623" # final point marker
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("#fafafa")
+
+    # 19% base-model reference
+    ax.axhline(0.19, color=BASE_C, linestyle="--", linewidth=1.4, alpha=0.9)
+    ax.text(
+        2, 0.19 + 0.014,
+        "Base model (no training): 19%",
+        fontsize=10, color="#666", style="italic",
+    )
+
+    # Training accuracy (background)
+    ax.plot(xs_train, ys_train, color=TRAIN_C, lw=2.2, label="Training accuracy")
+
+    # Validation accuracy (foreground)
+    ax.plot(xs_val, ys_val, color=VAL_C, lw=2.6, marker="o", markersize=7,
+            markerfacecolor="white", markeredgewidth=2.0,
+            label="Validation accuracy")
+
+    # Highlight final val point
+    final_x, final_y = xs_val[-1], ys_val[-1]
+    ax.plot(final_x, final_y, marker="o", markersize=11,
+            markerfacecolor=HIGHLIGHT, markeredgecolor="white", markeredgewidth=2.5, zorder=5)
+    ax.annotate(
+        f"74.2% on GSM8K validation",
+        xy=(final_x, final_y),
+        xytext=(final_x - 28, final_y + 0.06),
+        fontsize=11, fontweight="bold", color="#1a1a1a",
+        arrowprops=dict(arrowstyle="-", color="#888", lw=1.2),
+    )
+
+    # Gap arrow with explicit "19% → 74.2%" label
+    ax.annotate(
+        "",
+        xy=(102, 0.742), xytext=(102, 0.19),
+        arrowprops=dict(arrowstyle="<->", color="#999", lw=1.4),
+    )
+    ax.text(103.5, 0.742, "74.2%", fontsize=10.5, fontweight="bold",
+            color="#444", va="center", ha="left")
+    ax.text(103.5, 0.215, "19%", fontsize=10.5, fontweight="bold",
+            color="#444", va="center", ha="left")
+
+    ax.set_xlim(0, 115)
     ax.set_ylim(0.0, 1.0)
-    ax.grid(alpha=0.3)
-    ax.legend(loc="lower right", frameon=True)
-    fig.tight_layout()
+    ax.set_xticks([0, 20, 40, 60, 80, 100])
+    ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_yticklabels(["0%", "20%", "40%", "60%", "80%", "100%"], fontsize=10, color="#555")
+    ax.set_xlabel("GRPO training step", fontsize=11, color="#444", labelpad=8)
+    ax.tick_params(axis="x", labelsize=10, colors="#555", length=0)
+    ax.tick_params(axis="y", length=0)
 
+    fig.text(
+        0.04, 0.965,
+        "From 19% to 74.2%: GRPO training trajectory",
+        fontsize=15, fontweight="bold", color="#1a1a1a",
+    )
+    fig.text(
+        0.04, 0.925,
+        "Qwen2.5-Math-1.5B  ·  SFT warmup, then GRPO at LR=2e-5  ·  GSM8K",
+        fontsize=10.5, color="#777",
+    )
+
+    for s in ["top", "right"]:
+        ax.spines[s].set_visible(False)
+    ax.spines["left"].set_color("#bbb")
+    ax.spines["bottom"].set_color("#bbb")
+
+    ax.grid(axis="y", alpha=0.4, linestyle="--", color="#bbb", linewidth=0.6)
+    ax.set_axisbelow(True)
+
+    leg = ax.legend(loc="lower right", frameon=True, fontsize=10, facecolor="white",
+                    edgecolor="#ddd")
+    leg.get_frame().set_alpha(0.95)
+
+    fig.tight_layout(rect=[0, 0, 1, 0.91])
     out = FIG_DIR / "training_curves.png"
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=200, facecolor="white")
     plt.close(fig)
     print(f"  wrote {out}")
 
