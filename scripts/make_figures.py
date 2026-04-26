@@ -129,6 +129,20 @@ def chart_training_curves(histories: dict[str, list[dict]]):
 # Chart 2 — Ablation bar chart from CSV
 # ---------------------------------------------------------------------------
 
+LABEL_MAP = {
+    "lr_2e-5":             "LR = 2e-5  (best)",
+    "minimal_prompt":      "Minimal prompt",
+    "offpolicy_k4_noclip": "Off-policy K=4, no clip",
+    "baseline":            "Baseline  (LR = 1e-5)",
+    "length_norm":         "Length normalization",
+    "offpolicy_k4_clip":   "Off-policy K=4, clipped",
+    "offpolicy_k2_clip":   "Off-policy K=2, clipped",
+    "no_std_norm":         "No std normalization",
+    "lr_5e-6":             "LR = 5e-6  (too low)",
+    "no_baseline":         "No baseline  (fails)",
+}
+
+
 def chart_ablations():
     with open(CSV_PATH) as f:
         rows = list(csv.DictReader(f))
@@ -136,40 +150,87 @@ def chart_ablations():
     rows.sort(key=lambda r: float(r["val_accuracy"]), reverse=True)
     names = [r["experiment"] for r in rows]
     accs  = [float(r["val_accuracy"]) for r in rows]
+    labels = [LABEL_MAP.get(n, n) for n in names]
+
+    BEST = "#f5a623"     # gold
+    FAIL = "#d0021b"     # red
+    BASE = "#4a90e2"     # blue
+    NEUTRAL = "#cfd2d6"  # light grey
 
     colors = []
     for n in names:
         if n == "lr_2e-5":
-            colors.append("#ffb000")   # gold — best
+            colors.append(BEST)
+        elif n == "no_baseline":
+            colors.append(FAIL)
         elif n == "baseline":
-            colors.append("#1f77b4")   # blue — baseline
+            colors.append(BASE)
         else:
-            colors.append("#b0b0b0")   # grey — others
+            colors.append(NEUTRAL)
 
-    fig, ax = plt.subplots(figsize=(9, 5.5))
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
+    })
+
+    fig, ax = plt.subplots(figsize=(10, 6.4))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("#fafafa")
+
     y_pos = np.arange(len(names))
-    bars = ax.barh(y_pos, accs, color=colors, edgecolor="#333", linewidth=0.6)
+    bars = ax.barh(
+        y_pos, accs,
+        color=colors, edgecolor="white", linewidth=1.5, height=0.72,
+    )
 
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(names)
+    ax.set_yticklabels(labels, fontsize=11.5)
     ax.invert_yaxis()
-    ax.set_xlabel("Validation accuracy on MATH")
-    ax.set_xlim(0, 0.85)
-    ax.set_title("Ablation sweep: 10 experiments, baseline subtraction is critical")
-    ax.grid(axis="x", alpha=0.3)
+    ax.set_xlim(0, 0.92)
+    ax.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8])
+    ax.set_xticklabels(["0%", "20%", "40%", "60%", "80%"], fontsize=10, color="#555")
 
-    # Annotate bars with percentage
-    for bar, acc in zip(bars, accs):
+    fig.text(
+        0.04, 0.965,
+        "Baseline subtraction is the difference between learning and not",
+        fontsize=15, fontweight="bold", color="#1a1a1a",
+    )
+    fig.text(
+        0.04, 0.925,
+        "10 GRPO ablations · Qwen2.5-Math-1.5B · GSM8K validation accuracy",
+        fontsize=10.5, color="#777",
+    )
+
+    for s in ["top", "right"]:
+        ax.spines[s].set_visible(False)
+    ax.spines["left"].set_color("#bbb")
+    ax.spines["bottom"].set_color("#bbb")
+
+    ax.grid(axis="x", alpha=0.4, linestyle="--", color="#bbb", linewidth=0.6)
+    ax.set_axisbelow(True)
+    ax.tick_params(axis="y", length=0)
+    ax.tick_params(axis="x", length=0)
+
+    for bar, acc, name in zip(bars, accs, names):
+        is_highlight = name in ("lr_2e-5", "no_baseline")
+        text_color = (
+            BEST if name == "lr_2e-5"
+            else FAIL if name == "no_baseline"
+            else "#333"
+        )
         ax.text(
-            bar.get_width() + 0.006,
+            bar.get_width() + 0.01,
             bar.get_y() + bar.get_height() / 2,
             f"{acc * 100:.1f}%",
-            va="center", fontsize=9,
+            va="center",
+            fontsize=11 if is_highlight else 10,
+            fontweight="bold" if is_highlight else "normal",
+            color=text_color,
         )
 
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0, 1, 0.91])
     out = FIG_DIR / "ablations.png"
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=200, facecolor="white")
     plt.close(fig)
     print(f"  wrote {out}")
 

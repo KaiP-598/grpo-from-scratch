@@ -102,6 +102,21 @@ A healthy RL run shows reward rising as policy entropy falls — the model trans
 
 ## Ablation Highlights
 
+All 10 runs use the same GRPO training pipeline (G=8 group sampling, GSM8K, post-SFT Qwen2.5-Math-1.5B, outcome rewards). Each run modifies one component:
+
+| # | Experiment | What's changed |
+|---|---|---|
+| 1 | baseline | Reference GRPO config (LR=1e-5) |
+| 2 | no_baseline | Group mean subtraction removed |
+| 3 | lr_5e-6 | Lower learning rate |
+| 4 | lr_2e-5 | Higher learning rate |
+| 5 | length_norm | Length normalization on |
+| 6 | no_std_norm | Std normalization removed |
+| 7 | offpolicy_k4_clip | K=4 rollout reuse, PPO clipping on |
+| 8 | offpolicy_k2_clip | K=2 rollout reuse, PPO clipping on |
+| 9 | offpolicy_k4_noclip | K=4 rollout reuse, PPO clipping off |
+| 10 | minimal_prompt | Direct-answer prompt instead of CoT |
+
 ![Ablation bar chart](results/figures/ablations.png)
 
 Key findings from the experiments:
