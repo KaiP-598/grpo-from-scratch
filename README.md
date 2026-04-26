@@ -106,11 +106,20 @@ A healthy RL run shows reward rising as policy entropy falls — the model trans
 
 Key findings from the experiments:
 
-1. **Baseline subtraction is critical** — without it, training collapses (19.5% vs 67.4%)
-2. **Std normalization matters** — removing it drops accuracy from 67.4% to 51.9%
-3. **Higher LR helps** — 2e-5 significantly outperforms 1e-5 (74.2% vs 67.4%)
-4. **Off-policy reuse** — reusing rollouts K=4 times without clipping (68.8%) outperforms with clipping (60.3%), suggesting the KL divergence stays small enough that clipping hurts more than it helps at this scale
-5. **Minimal prompts work well** — direct-answer format (72.1%) is competitive with chain-of-thought (67.4%), though format accuracy is similar
+**1. Baseline subtraction is doing all the work — 19.5% without, 67.4% with.**
+GRPO samples 8 responses per question and scores each (1 = correct, 0 = wrong). Without subtracting the group mean, wrong responses produce zero gradient — only correct ones push the model. Sparse and noisy. Subtracting the mean turns wrong responses into negative advantages, so every response becomes a training signal. If 3 of 8 are correct (mean = 0.375), correct ones get advantage **+0.625**, wrong ones get **-0.375**. Same algorithm, one subtraction — 19% vs 67%.
+
+**2. Std normalization matters more than expected — removing it drops accuracy 15 points (67.4% → 51.9%).**
+Hypothesis: dividing by std keeps the effective learning rate stable across batches with different reward variance. When reward variance is high, raw advantages are large → gradient steps are huge → instability. When variance is low, advantages are tiny → weak signal. Std normalization flattens that out.
+
+**3. Higher LR wins on a fixed step budget — 2e-5 hit 74.2%, 1e-5 stalled at 67.4%, 5e-6 didn't even beat the SFT baseline at 100 steps.**
+Rollouts are expensive (vLLM generation dominates compute), so each gradient step has to count. More aggressive updates extract more signal per rollout batch. This probably doesn't generalize to longer training budgets — at some point higher LR overshoots — but on a fixed step budget, leaning aggressive paid off.
+
+**4. PPO clipping actively hurt at this scale — 68.8% without it, 60.3% with it (K=4 off-policy reuse).**
+Clipping zeros gradients on tokens whose probability ratio drifts past a threshold — designed to prevent runaway updates. Hypothesis: at 1.5B scale with a small learning rate, the policy doesn't drift far enough between updates for clipping's protection to matter, but the threshold still fires often enough to materially shrink useful gradient signal. Right safety mechanism, wrong regime.
+
+**5. Minimal prompts beat chain-of-thought prompts — 72.1% vs 67.4%.**
+Two prompts tested: one that just shows the question, and one that tells the model "think step by step" with a specific reasoning format. The minimal one won by 5 points. Hypothesis: SFT had already taught the model how to reason on these problems. Adding explicit instructions on top likely overrode that learned format, making GRPO spend gradient updates pushing against the prompt instead of refining what was already there. On this setup at least: if SFT did its job, your prompt may be competing with the model rather than helping it.
 
 ## Requirements
 
