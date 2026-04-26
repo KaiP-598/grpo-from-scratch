@@ -13,7 +13,9 @@ This repo contains training code for fine-tuning a 1.5B parameter language model
 
 Starting from a base model with ~19% accuracy on GSM8K, GRPO training reaches **74.2%** accuracy:
 
-![Training reward curves across learning rates](results/figures/training_curves.png)
+![Training trajectory: 19% to 74.2% over 100 GRPO steps, training accuracy and validation accuracy plotted together](results/figures/training_curves.png)
+
+The light line is per-step training accuracy (the model's accuracy on the questions it's currently practicing on). The dark line is validation accuracy on held-out GSM8K questions, measured every 10 steps — the honest number we report.
 
 
 | Experiment | Variant | LR | Val Accuracy |
